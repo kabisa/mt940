@@ -21,7 +21,7 @@ class MT940::Rabobank < MT940::Base
                                             date: valuta_date,
                                             contra_account_iban: contra_account_iban,
                                             contra_account: number)
-    elsif @line.match(/^:61:(\d{6})(C|D)(\d+),(\d{0,2})N(.{3})([P|\d]\d{9}|NONREF)\s*(.+)?$/)
+    elsif @line.match(/^:61:(\d{6})(C|D)(\d+),(\d{0,2})N(.{3})([P|\d]\d{7,9}|NONREF)\s*(.+)?$/)
       sign = $2 == 'D' ? -1 : 1
       @transaction = MT940::Transaction.new(:bank_account => @bank_account, :amount => sign * ($3 + '.' + $4).to_f, :bank => @bank, :currency => @currency)
       @transaction.type = human_readable_type($5)
