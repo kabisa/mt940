@@ -294,6 +294,14 @@ describe "Rabobank" do
         end
       end
 
+      context 'without a proper description' do
+        let(:transaction) { bank_statements_for_account[1].transactions[4] }
+
+        it 'should have an empty description' do
+          transaction.description.should == ''
+        end
+      end
+
     end
   end
 

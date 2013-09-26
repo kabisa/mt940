@@ -40,7 +40,12 @@ class MT940::Rabobank < MT940::Base
   def parse_tag_86
     if @is_structured_format
       description_parts = @line[4..-1].split('/')
-      @transaction.description = description_parts[description_parts.index { |part| part == "REMI" } + 1].gsub("\n", '')
+      description_start_index = description_parts.index { |part| part == "REMI" }
+      if description_start_index
+        @transaction.description = description_parts[description_start_index + 1].gsub(/\r|\n/, '')
+      else
+        @transaction.description = ''
+      end
       @transaction.contra_account_owner = description_parts[description_parts.index { |part| part == "NAME" } + 1].gsub("\n", '') if description_parts.index { |part| part == "NAME" }
     elsif @line.match(/^:86:(.*)$/)
       @transaction.description = [@transaction.description, $1].join(" ").strip
