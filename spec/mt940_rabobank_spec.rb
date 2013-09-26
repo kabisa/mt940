@@ -165,7 +165,7 @@ describe "Rabobank" do
 
       it "should have the correct number of transactions per bank statement" do
         bank_statements_for_account[0].transactions.size.should == 2
-        bank_statements_for_account[1].transactions.size.should == 7
+        bank_statements_for_account[1].transactions.size.should == 8
       end
 
       context "single bank statement" do
@@ -291,6 +291,14 @@ describe "Rabobank" do
 
         it "should have a type" do
           transaction.type.should == "Afschrijving rente provisie kosten"
+        end
+      end
+
+      context 'with IBAN and BIC' do
+        let(:transaction) { bank_statements_for_account[1].transactions[7] }
+
+        it 'should have BIC' do
+          transaction.contra_account_bic.should == 'INGBNL2A'
         end
       end
 
