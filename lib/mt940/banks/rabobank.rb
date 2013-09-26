@@ -10,7 +10,7 @@ class MT940::Rabobank < MT940::Base
       sign = @line[10, 1] == 'D' ? -1 : 1
       amount = sign * @line[11, 15].gsub(',', '.').to_f
       transaction_type = human_readable_type(@line[27, 3])
-      parts = @line.split("\n")
+      parts = @line.split(/\r?\n/)
       contra_account_iban = parts.size > 1 ? parts.last.gsub(/^[P]{0,1}0*/, '') : nil
       number = contra_account_iban.nil? ? "NONREF" : contra_account_iban.strip.split(//).last(9).join
       @transaction = MT940::Transaction.new(:bank_account => @bank_account,
@@ -46,7 +46,7 @@ class MT940::Rabobank < MT940::Base
       else
         @transaction.description = ''
       end
-      @transaction.contra_account_owner = description_parts[description_parts.index { |part| part == "NAME" } + 1].gsub("\n", '') if description_parts.index { |part| part == "NAME" }
+      @transaction.contra_account_owner = description_parts[description_parts.index { |part| part == "NAME" } + 1].gsub(/\r|\n/, '') if description_parts.index { |part| part == "NAME" }
     elsif @line.match(/^:86:(.*)$/)
       @transaction.description = [@transaction.description, $1].join(" ").strip
     end
