@@ -164,7 +164,7 @@ describe "Rabobank" do
       let(:bank_statements_for_account) { bank_statements["123456789"] }
 
       it "should have the correct number of transactions per bank statement" do
-        bank_statements_for_account[0].transactions.size.should == 2
+        bank_statements_for_account[0].transactions.size.should == 3
         bank_statements_for_account[1].transactions.size.should == 8
       end
 
@@ -235,6 +235,17 @@ describe "Rabobank" do
 
         end
 
+        context "transaction with description on several lines and name with slash" do
+          let(:transaction) { bank_statement.transactions[2] }
+
+          it "should parse name properly" do
+            transaction.contra_account_owner.should == "Hr R Kuil en/of Mw A Kuil-Germain"
+          end
+
+          it "should parse descripton properly" do
+            transaction.description.should == "861835-574631143"
+          end
+        end
       end
 
       context "credit transaction" do
@@ -249,17 +260,16 @@ describe "Rabobank" do
         end
 
         it "should have the correct contra account" do
-          transaction.contra_account.should == "NONREF"
+          transaction.contra_account.should == "663616476"
         end
 
         it "should have the correct contra account iban" do
-          transaction.contra_account_iban.should be_nil
+          transaction.contra_account_iban.should == "663616476"
         end
 
         it "should have the correct contra account owner" do
           transaction.contra_account_owner.should == "Bedrijf B.V."
         end
-
       end
 
       context "transaction with a GIRO number" do
@@ -308,8 +318,11 @@ describe "Rabobank" do
         it 'should have BIC' do
           transaction.contra_account_bic.should == 'INGBNL2A'
         end
-      end
 
+        it 'should have IBAN' do
+          transaction.contra_account_iban.should == 'NL54INGB0006752576'
+        end
+      end
     end
   end
 

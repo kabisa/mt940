@@ -40,23 +40,37 @@ class MT940::Rabobank < MT940::Base
   def parse_tag_86
     if @is_structured_format
       description_parts = @line[4..-1].split('/')
+
       accw_index = description_parts.index { |dp| dp == 'ACCW' }
       if accw_index
         @transaction.contra_account_bic = description_parts[accw_index + 1].split(',')[1]
       end
+
       description_start_index = description_parts.index { |part| part == "REMI" }
       if description_start_index
         @transaction.description = description_parts[description_start_index + 1].gsub(/\r|\n/, '')
       else
         @transaction.description = ''
       end
-      @transaction.contra_account_owner = description_parts[description_parts.index { |part| part == "NAME" } + 1].gsub(/\r|\n/, '') if description_parts.index { |part| part == "NAME" }
+
+      name_start_index = description_parts.index { |part| part == "NAME" }
+      if name_start_index
+        name_end_index = (description_start_index || 0) - 1
+        name_parts = description_parts[(name_start_index + 1)..name_end_index]
+        @transaction.contra_account_owner = name_parts.join('/').gsub(/\r|\n/, '')
+      end
+
     elsif @line.match(/^:86:(.*)$/)
       @transaction.description = [@transaction.description, $1].join(" ").strip
     end
   end
 
+  def mt_940_start_line?(line)
+    line.match /^:\d{2}(\D?|\d?):.*$/
+  end
+
   private
+
   def human_readable_type(type)
     if type.match(/\d+/)
       MAPPING[type.to_i] || type.to_s
