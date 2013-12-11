@@ -164,7 +164,7 @@ describe "Rabobank" do
       let(:bank_statements_for_account) { bank_statements["123456789"] }
 
       it "should have the correct number of transactions per bank statement" do
-        bank_statements_for_account[0].transactions.size.should == 3
+        bank_statements_for_account[0].transactions.size.should == 4
         bank_statements_for_account[1].transactions.size.should == 8
       end
 
@@ -244,6 +244,18 @@ describe "Rabobank" do
 
           it "should parse descripton properly" do
             transaction.description.should == "861835-574631143"
+          end
+        end
+
+        context "transaction with slashes in description on several lines" do
+          let(:transaction) { bank_statement.transactions[3] }
+
+          it "should parse name properly" do
+            transaction.contra_account_owner.should == "D VAN WAARD CJ"
+          end
+
+          it "should parse descripton properly" do
+            transaction.description.should == "/IBS.00008908/ 1001680-P796142 KINDEROPVANG"
           end
         end
       end

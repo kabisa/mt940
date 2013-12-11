@@ -40,26 +40,9 @@ class MT940::Rabobank < MT940::Base
   def parse_tag_86
     if @is_structured_format
       description_parts = @line[4..-1].split('/')
-
-      accw_index = description_parts.index { |dp| dp == 'ACCW' }
-      if accw_index
-        @transaction.contra_account_bic = description_parts[accw_index + 1].split(',')[1]
-      end
-
-      description_start_index = description_parts.index { |part| part == "REMI" }
-      if description_start_index
-        @transaction.description = description_parts[description_start_index + 1].gsub(/\r|\n/, '')
-      else
-        @transaction.description = ''
-      end
-
-      name_start_index = description_parts.index { |part| part == "NAME" }
-      if name_start_index
-        name_end_index = (description_start_index || 0) - 1
-        name_parts = description_parts[(name_start_index + 1)..name_end_index]
-        @transaction.contra_account_owner = name_parts.join('/').gsub(/\r|\n/, '')
-      end
-
+      @transaction.contra_account_bic   = description_part_for(description_parts, start: 'ACCW').split(',')[1]
+      @transaction.contra_account_owner = description_part_for(description_parts, start: 'NAME', end: 'REMI').gsub(/\r|\n/, '')
+      @transaction.description          = description_part_for(description_parts, start: 'REMI', end: 'ISDT', greedy: true).gsub(/\r|\n/, '')
     elsif @line.match(/^:86:(.*)$/)
       @transaction.description = [@transaction.description, $1].join(" ").strip
     end
@@ -70,6 +53,15 @@ class MT940::Rabobank < MT940::Base
   end
 
   private
+
+  def description_part_for(description_parts, params)
+    start_inset_index = description_parts.find_index(params[:start])
+    return '' unless start_inset_index
+    start_index = start_inset_index + 1
+    end_index = params[:end] && (end_inset_index = description_parts.find_index(params[:end])) && (end_inset_index - 1)
+    end_index ||= params[:greedy] ? -1 : start_index
+    description_parts[start_index..end_index].join('/')
+  end
 
   def human_readable_type(type)
     if type.match(/\d+/)
