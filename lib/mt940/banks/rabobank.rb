@@ -11,7 +11,7 @@ class MT940::Rabobank < MT940::Base
       amount = sign * @line[11, 15].gsub(',', '.').to_f
       transaction_type = human_readable_type(@line[27, 3])
       parts = @line.split(/\r?\n/)
-      contra_account_iban = parts.size > 1 ? parts.last.gsub(/^[P]{0,1}0*/, '') : nil
+      contra_account_iban = parts.size > 1 ? parts.last.gsub(/^[P]{0,1}0*|\t/, '') : nil
       number = contra_account_iban.nil? ? "NONREF" : contra_account_iban.strip.split(//).last(9).join
       @transaction = MT940::Transaction.new(:bank_account => @bank_account,
                                             :bank_account_iban => @bank_account_iban,
@@ -39,7 +39,7 @@ class MT940::Rabobank < MT940::Base
 
   def parse_tag_86
     if @is_structured_format
-      description_parts = @line[4..-1].gsub(/\r|\n/, '').split('/')
+      description_parts = @line[4..-1].gsub(/\r|\n|\t/, '').split('/')
       @transaction.contra_account_bic   = description_part_for(description_parts, start: 'ACCW').split(',')[1]
       @transaction.contra_account_owner = description_part_for(description_parts, start: 'NAME', end: 'REMI')
       @transaction.description          = description_part_for(description_parts, start: 'REMI', end: 'ISDT', greedy: true)
